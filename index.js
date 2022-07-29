@@ -1,3 +1,30 @@
+async function init() {
+  await listAvailableTokens();
+}
+
+async function listAvailableTokens() {
+  console.log('initializing');
+  let response = await fetch('https://tokens.coingecko.com/uniswap/all.json');
+  let tokenListJSON = await response.json();
+  console.log('listing available tokens: ', tokenListJSON);
+  tokens = tokenListJSON.tokens;
+  console.log('tokens: ', tokens);
+
+  // Create token list for modal
+  let parent = document.getElementById('token_list');
+  for (const i in tokens) {
+    // Token row in the modal token list
+    let div = document.createElement('div');
+    div.className = 'token_row';
+    let html = `
+        <img class="token_list_img" src="${tokens[i].logoURI}">
+          <span class="token_list_text">${tokens[i].symbol}</span>
+          `;
+    div.innerHTML = html;
+    parent.appendChild(div);
+  }
+}
+
 async function connect() {
   if (typeof window.ethereum !== 'undefined') {
     try {
@@ -18,6 +45,8 @@ async function connect() {
   }
 }
 
+init();
+
 function openModal() {
   document.getElementById('token_modal').style.display = 'block';
 }
@@ -26,6 +55,6 @@ function closeModal() {
   document.getElementById('token_modal').style.display = 'none';
 }
 
-document.getElementById("login_button").onclick = connect;
-document.getElementById("from_token_select").onclick = openModal;
-document.getElementById("modal_close").onclick = closeModal;
+document.getElementById('login_button').onclick = connect;
+document.getElementById('from_token_select').onclick = openModal;
+document.getElementById('modal_close').onclick = closeModal;

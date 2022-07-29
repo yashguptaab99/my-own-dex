@@ -12,15 +12,14 @@ async function listAvailableTokens() {
   console.log('initializing');
   let response = await fetch('https://tokens.coingecko.com/uniswap/all.json');
   let tokenListJSON = await response.json();
-  console.log('listing available tokens');
-  console.log(tokenListJSON);
+  console.log('listing available tokens: ', tokenListJSON);
   tokens = tokenListJSON.tokens;
-  console.log('tokens:', tokens);
+  console.log('tokens: ', tokens);
 
-  // create token list for modal
+  // Create token list for modal
   let parent = document.getElementById('token_list');
   for (const i in tokens) {
-    // token row in the modal token list
+    // Token row in the modal token list
     let div = document.createElement('div');
     div.className = 'token_row';
     let html = `
@@ -35,7 +34,7 @@ async function listAvailableTokens() {
   }
 }
 
-function selectToken(token) {
+async function selectToken(token) {
   closeModal();
   currentTrade[currentSelectSide] = token;
   console.log('currentTrade:', currentTrade);
@@ -116,6 +115,43 @@ async function getPrice() {
     swapPriceJSON.buyAmount / 10 ** currentTrade.to.decimals;
   document.getElementById('gas_estimate').innerHTML =
     swapPriceJSON.estimatedGas;
+}
+
+async function getQuote(account) {
+  console.log('Getting Quote');
+
+  if (
+    !currentTrade.from ||
+    !currentTrade.to ||
+    !document.getElementById('from_amount').value
+  )
+    return;
+  let amount = Number(
+    document.getElementById('from_amount').value *
+      10 ** currentTrade.from.decimals
+  );
+
+  const params = {
+    sellToken: currentTrade.from.address,
+    buyToken: currentTrade.to.address,
+    sellAmount: amount,
+    takerAddress: account,
+  };
+
+  // Fetch the swap quote.
+  const response = await fetch(
+    `https://api.0x.org/swap/v1/quote?${qs.stringify(params)}`
+  );
+
+  swapQuoteJSON = await response.json();
+  console.log('Quote: ', swapQuoteJSON);
+
+  document.getElementById('to_amount').value =
+    swapQuoteJSON.buyAmount / 10 ** currentTrade.to.decimals;
+  document.getElementById('gas_estimate').innerHTML =
+    swapQuoteJSON.estimatedGas;
+
+  return swapQuoteJSON;
 }
 
 init();
